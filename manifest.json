@@ -14,7 +14,8 @@
     "permissions": [
         "tabs",
         "activeTab",
-        "storage"
+        "storage",
+        "sidePanel"
     ],
     "action": {
         "default_icon": {
@@ -22,8 +23,10 @@
             "32": "images/icon-32.png",
             "48": "images/icon-48.png",
             "128": "images/icon-128.png"
-        },
-        "default_popup": "popup.html"
+        }
+    },
+    "side_panel": {
+        "default_path": "sidepanel/sidepanel.html"
     },
     "commands": {
         "_execute_action": {

@@ -4,25 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="sidepanel.css">
 
 </head>
 
 <body>
     <template id="li_template">
-        <li>
-            <a>
-                <h3 class="title">Tab Title</h3>
-                <p class="pathname">Tab Pathname</p>
-            </a>
-        </li>
+        <div class="session">${session}</div>
+        <button class="deleteSession"></button>
+        <!-- <div class="tabsList"></div> -->
     </template>
 
-    <h1>Google Dev Docs</h1>
-    <button>Group Tabs</button>
-    <ul></ul>
+    <h1>Sessions sauvegardées</h1>
+    <div id="inputBox">
+        <label for="newSessionTitle">Titre : </label>
+        <input type="text" name="newSessionTitle" id="newSessionTitle"
+            placeholder="Indiquez ici le titre de votre nouvelle session">
+        <button id="sessionSave">Sauvegarder</button>
+    </div>
 
-    <script src="./popup.js" type="module"></script>
+    <button id="sessionPrint">Afficher les sessions</button>
+    <div id="sessionsList"></div>
+
+    <script src="./sidepanel.js" type="module"></script>
 </body>
 
 </html>
