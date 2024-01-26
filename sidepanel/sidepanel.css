@@ -1,13 +1,33 @@
 body {
-    width: 20rem;
-  }
-  
+  width: 20rem;
+}
+
 .session {
   cursor: pointer;
   margin-bottom: 10px;
 }
 
-.sessionHeader {
+.sessionHeader,
+.sessionTab {
   display: flex;
   justify-content: space-between;
 }
+
+.sessionName {
+  font-weight: bold;
+}
+
+.visible {
+  display: block
+}
+
+.hidden {
+  display: none
+}
+
+.deleteTab {
+  all: unset;
+  height: 16px;
+  width: 16px;
+}
+
