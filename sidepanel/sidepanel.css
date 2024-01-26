@@ -6,3 +6,8 @@ body {
   cursor: pointer;
   margin-bottom: 10px;
 }
+
+.sessionHeader {
+  display: flex;
+  justify-content: space-between;
+}

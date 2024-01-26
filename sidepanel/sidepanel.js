@@ -2,9 +2,7 @@ const sessionDisplay = document.querySelector("#sessionsList");
 
 const template = document.getElementById("sessionTemplate");
 
-document
-    .querySelector("#sessionPrint")
-    .addEventListener("click", printSessions);
+printSessions();
 
 async function printSessions() {
     sessionDisplay.innerHTML = "";
@@ -13,6 +11,9 @@ async function printSessions() {
         for (let session in storage) {
             let element = template.content.cloneNode(true);
             element.querySelector(".sessionName").textContent = session;
+            element.querySelector(
+                ".tabsCount"
+            ).textContent = `${storage[session].length} onglets`;
             sessionDisplay.appendChild(element);
         }
     });
@@ -25,20 +26,27 @@ document
 
 async function handleNewSession() {
     // get newSession name
-    const inputBox = document.getElementById("newSessionTitle")
+    const inputBox = document.getElementById("newSessionTitle");
     const newSessionTitle = inputBox.value;
-    inputBox.value = ""
     // send message with this name to background => so it get current tabs & saves  it as a new session
     if (newSessionTitle) {
-        await chrome.runtime.sendMessage({
-            type: "toSave",
-            newTitle: newSessionTitle,
-        });
-
-        // get currentSession newly stored in chrome.storage and print it
-        printSessions();
+        await saveCurrentSession(newSessionTitle);
+        await printSessions();
+        inputBox.value = "";
     }
+}
 
+async function saveCurrentSession(name) {
+    // obtenir la liste des tabs
+    let formattedTabsList = await chrome.tabs
+        .query({ currentWindow: true })
+        .then((tabsList) =>
+            tabsList.map((tab) => {
+                return { tab: tab.title, URL: tab.url };
+            })
+        );
+    // sauvegarder dans le storage
+    await chrome.storage.local.set({ [name]: formattedTabsList });
 }
 
 sessionDisplay.addEventListener("click", function (event) {
@@ -59,29 +67,26 @@ async function openSession(sessionTitle) {
     const urls = tabsArray.map((tab) => tab.URL);
 
     // ouvrir la fenêtre avec les onglets de la session
-    chrome.windows.create({ focused: true, state:"maximized", url: urls });
+    chrome.windows.create({ focused: true, state: "maximized", url: urls });
     // CHECK : si un seul onglet est ouvert et qu'il s'agit d'un onglet newTab ou d'un onglet de recherche Google
-    await chrome.windows.getCurrent({populate:true}).then(window => {
-        if (window.tabs.length === 1 && (window.tabs[0].url === "chrome://extensions/" || window.tabs[0].url === "chrome://newtab/")) {
-            console.log("à supprimer");
-            chrome.windows.remove(window.id)
-        }
-    })
-    
+    await chrome.windows.getCurrent({ populate: true }).then((window) => {
+        const closingWindowConditions =
+            window.tabs.length === 1 &&
+            (window.tabs[0].url === "chrome://extensions/" ||
+                window.tabs[0].url === "chrome://newtab/");
+        if (closingWindowConditions) chrome.windows.remove(window.id);
+    });
 }
 
 async function deleteSession(event) {
-    const sessionName = event.target.parentNode.parentNode.querySelector(".sessionName").textContent
+    const sessionName =
+        event.target.parentNode.parentNode.querySelector(
+            ".sessionName"
+        ).textContent;
     // supprimer la session de la base de données
-    await chrome.storage.local.remove(sessionName)
+    await chrome.storage.local.remove(sessionName);
     // actualiser l'affichage de la liste
-    printSessions()
+    printSessions();
 }
 
-
-function deleteList(event) {
-
-}
-
-
-
+function deleteList(event) {}

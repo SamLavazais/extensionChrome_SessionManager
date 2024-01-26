@@ -34,10 +34,6 @@
                 "default": "Ctrl+M",
                 "mac": "Command+M"
             }
-        },
-        "triggerSearch": {
-            "suggested_key": "Ctrl+B",
-            "description": "get tabs info"
         }
     }
 }
