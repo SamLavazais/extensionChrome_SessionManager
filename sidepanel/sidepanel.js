@@ -36,10 +36,12 @@ function printSession(storage, session) {
     element.querySelector(".sessionName").textContent = session;
     element.querySelector(
         ".tabsCount"
-    ).textContent = `${storage[session].length} onglets`;
+    ).textContent = `${storage[session].length} tabs`;
     element.querySelector(".tabsList").innerHTML = storage[session]
         .map(
-            (tab) => // possibilité : ajouter l'URL dans le html ci-dessous : <div class="tabURL">${tab.URL}</div>
+            (
+                tab // possibilité : ajouter l'URL dans le html ci-dessous : <div class="tabURL">${tab.URL}</div>
+            ) =>
                 `<div class="sessionTab">
                 <div class="tabTitle">${tab.tab}</div>
                 <button class="deleteTab"><img src="deleteBtn.svg" alt=""></button>
@@ -54,10 +56,14 @@ function printTabsList(sessionName, tabsArray) {
         // récupérer la div concernée dans le DOM grâce au nom
         if (session.querySelector(".sessionName").textContent === sessionName) {
             // récupérer sa tabslistDiv
-            session.querySelector(".tabsCount").textContent = `${tabsArray.length} onglets`
+            session.querySelector(
+                ".tabsCount"
+            ).textContent = `${tabsArray.length} tabs`;
             session.querySelector(".tabsList").innerHTML = tabsArray
                 .map(
-                    (tab) => // possibilité : ajouter l'URL dans le html ci-dessous : <div class="tabURL">${tab.URL}</div>
+                    (
+                        tab // possibilité : ajouter l'URL dans le html ci-dessous : <div class="tabURL">${tab.URL}</div>
+                    ) =>
                         `<div class="sessionTab" data-url=${tab.URL}>
                     <div class="tabTitle">${tab.tab}</div>
                     <button class="deleteTab"><img src="deleteBtn.svg" alt=""></button>
@@ -141,10 +147,9 @@ async function deleteTab(event) {
         event.target.parentNode.parentNode.parentNode.parentNode;
 
     // récupérer l'URL du tab
-    console.log(event.target.parentNode.parentNode)
+    console.log(event.target.parentNode.parentNode);
 
-    let urlToDelete =
-        event.target.parentNode.parentNode.dataset.url;
+    let urlToDelete = event.target.parentNode.parentNode.dataset.url;
     // obtenir le nom de la session concernée
     let targetSessionName =
         event.target.parentNode.parentNode.parentNode.parentNode.querySelector(
