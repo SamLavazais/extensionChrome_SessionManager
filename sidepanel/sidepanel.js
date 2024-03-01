@@ -1,27 +1,28 @@
 const sessionDisplay = document.querySelector("#sessionsList");
 
-printSessions();
+async function main() {
+    await printSessions();
+    // sauvegarder une nouvelle session
+    document
+        .querySelector("#sessionSave")
+        .addEventListener("click", handleNewSession);
+    sessionDisplay.addEventListener("click", (event) => {
+        // console.log(event.target.className);
+        if (event.target.className === "deleteSession") {
+            deleteSession(event);
+        } else if (event.target.className === "sessionName") {
+            openSession(event.target.textContent);
+        } else if (event.target.className === "showHideBtn") {
+            console.log(event.target);
+            showHideTabs(event);
+        } else if (event.target.className === "deleteTab") {
+            console.log(event.target);
+            deleteTab(event);
+        }
+    });
+}
 
-// sauvegarder une nouvelle session
-document
-    .querySelector("#sessionSave")
-    .addEventListener("click", handleNewSession);
-
-sessionDisplay.addEventListener("click", function (event) {
-    // console.log(event.target);
-    // console.log(event.target.className);
-    if (event.target.parentNode.className === "deleteSession") {
-        deleteSession(event);
-    } else if (event.target.className === "sessionName") {
-        openSession(event.target.textContent);
-    } else if (event.target.className === "showHideBtn") {
-        showHideTabs(
-            event.target.parentNode.parentNode.querySelector(".tabsList")
-        );
-    } else if (event.target.parentNode.className === "deleteTab") {
-        deleteTab(event);
-    }
-});
+main();
 
 async function printSessions() {
     sessionDisplay.innerHTML = "";
@@ -37,14 +38,15 @@ function printSession(storage, session) {
     element.querySelector(
         ".tabsCount"
     ).textContent = `${storage[session].length} tabs`;
+    element.querySelector(".deleteSession").dataset.name = session;
     element.querySelector(".tabsList").innerHTML = storage[session]
         .map(
             (
                 tab // possibilité : ajouter l'URL dans le html ci-dessous : <div class="tabURL">${tab.URL}</div>
             ) =>
-                `<div class="sessionTab">
+                `<div class="sessionTab" data-url=${tab.URL}>
                 <div class="tabTitle">${tab.tab}</div>
-                <button class="deleteTab"><img src="deleteBtn.svg" alt=""></button>
+                <img class="deleteTab" src="deleteBtn.svg" alt="">
             </div>`
         )
         .join("");
@@ -66,7 +68,7 @@ function printTabsList(sessionName, tabsArray) {
                     ) =>
                         `<div class="sessionTab" data-url=${tab.URL}>
                     <div class="tabTitle">${tab.tab}</div>
-                    <button class="deleteTab"><img src="deleteBtn.svg" alt=""></button>
+                    <img class="deleteTab" src="deleteBtn.svg" alt="">
                 </div>`
                 )
                 .join("");
@@ -123,36 +125,30 @@ async function openSession(sessionTitle) {
 }
 
 async function deleteSession(event) {
-    const sessionName =
-        event.target.parentNode.parentNode.querySelector(
-            ".sessionName"
-        ).textContent;
-    // supprimer la session de la base de données
+    const sessionName = event.target.dataset.name;
     await chrome.storage.local.remove(sessionName);
     // actualiser l'affichage de la liste
     printSessions();
 }
 
-function showHideTabs(sessionTabsListHTML) {
-    console.log(sessionTabsListHTML.className);
-    sessionTabsListHTML.className =
-        sessionTabsListHTML.className === "tabsList visible"
-            ? "tabsList hidden"
-            : "tabsList visible";
-    console.log(sessionTabsListHTML);
+function showHideTabs(event) {
+    let sessionTabsListHTML =
+        event.target.parentNode.parentNode.querySelector(".tabsList");
+    if (sessionTabsListHTML.className === "tabsList visible") {
+        sessionTabsListHTML.className = "tabsList hidden";
+        event.target.style.transform = "rotate(0deg)"
+    } else {
+        sessionTabsListHTML.className = "tabsList visible";
+        event.target.style.transform = "rotate(90deg)"
+    }
 }
 
 async function deleteTab(event) {
-    const sessionHTML =
-        event.target.parentNode.parentNode.parentNode.parentNode;
-
     // récupérer l'URL du tab
-    console.log(event.target.parentNode.parentNode);
-
-    let urlToDelete = event.target.parentNode.parentNode.dataset.url;
+    let urlToDelete = event.target.parentNode.dataset.url;
     // obtenir le nom de la session concernée
     let targetSessionName =
-        event.target.parentNode.parentNode.parentNode.parentNode.querySelector(
+        event.target.parentNode.parentNode.parentNode.querySelector(
             ".sessionName"
         ).textContent;
 
@@ -160,7 +156,7 @@ async function deleteTab(event) {
     await chrome.storage.local
         .get([targetSessionName])
         // supprimer le tab de la liste des tabs
-        .then(async (storage) => {
+        .then((storage) => {
             console.log(targetSessionName);
             console.log(storage[targetSessionName]);
             // pour chaque tab de la session
