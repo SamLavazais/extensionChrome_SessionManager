@@ -99,19 +99,21 @@ async function updateCurrentSessionNameDisplay() {
 async function printSessions() {
     sessionDisplay.innerHTML = "";
     await chrome.storage.local.get().then((storage) => {
-        for (let session in storage) printSession(storage, session);
+        for (let sessionName in storage) {
+            if (sessionName !== "currentSessions") printSession(storage, sessionName);
+        }
     });
 }
 
-function printSession(storage, session) {
+function printSession(storage, sessionName) {
     const template = document.getElementById("sessionTemplate");
     let element = template.content.cloneNode(true);
-    element.querySelector(".sessionName").textContent = session;
+    element.querySelector(".sessionName").textContent = sessionName;
     element.querySelector(
         ".tabsCount"
-    ).textContent = `${storage[session].length} tabs`;
-    element.querySelector(".deleteSession").dataset.name = session;
-    element.querySelector(".tabsList").innerHTML = storage[session]
+    ).textContent = `${storage[sessionName].length} tabs`;
+    element.querySelector(".deleteSession").dataset.name = sessionName;
+    element.querySelector(".tabsList").innerHTML = storage[sessionName]
         .map(
             (
                 tab // possibilité : ajouter l'URL dans le html ci-dessous : <div class="tabURL">${tab.URL}</div>
