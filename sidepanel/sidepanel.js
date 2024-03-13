@@ -1,11 +1,27 @@
+// récupérer la div pour afficher la listes des sessions disponibles
 const sessionDisplay = document.querySelector("#sessionsList");
+// récupérer la div pour afficher la session actuelle
+const currentSessionDisplay = document.body.querySelector("#currentSession");
 
 async function main() {
+    // si aucune paire n'est encore sauvegardée, créer une clé dans le storage
+    await chrome.storage.local.get(async (storage) => {
+        if (!storage["currentSessions"])
+            await chrome.storage.local.set({ ["currentSessions"]: [] });
+    });
+
+    // afficher les sessions sauvegardées
     await printSessions();
-    // sauvegarder une nouvelle session
+
+    // afficher/updater le nom de la session actuelle (s'il y en a une)
+    updateCurrentSessionNameDisplay();
+
+    // permettre de sauvegarder une nouvelle session
     document
         .querySelector("#sessionSave")
         .addEventListener("click", handleNewSession);
+
+    // écouter les clicks de l'utilisateur sur mon sidepanel
     sessionDisplay.addEventListener("click", (event) => {
         // console.log(event.target.className);
         if (event.target.className === "deleteSession") {
@@ -23,6 +39,42 @@ async function main() {
 }
 
 main();
+
+async function saveCurrentSession(windowId, sessionTitle) {
+    // quand j'ouvre une session : enregistrer la windowId dans [currentSessions]
+    // quand je crée une session : idem
+    let storage = await chrome.storage.local.get();
+    storage["currentSessions"].push({ name: sessionTitle, windowId: windowId });
+    console.log("nouvelle session active", windowId, sessionTitle);
+    await chrome.storage.local.set({
+        currentSessions: storage["currentSessions"],
+    });
+    // await chrome.storage.local.get((data) => console.log(data));
+    // quand j'enregistre une session : updater la session actuelle affichée
+    await updateCurrentSessionNameDisplay();
+}
+
+async function updateCurrentSessionNameDisplay() {
+    // obtenir l'id de la fenêtre active
+    let thisWindow = await chrome.windows.getCurrent();
+    // console.log(thisWindow.id);
+    // obtenir la liste des sessions ouvertes actuellement
+    await chrome.storage.local.get((storage) => {
+        // console.log("currentsessions:", storage['currentSessions'])
+        // console.log("thisWindow id:", thisWindow.id)
+        const currentSession = storage["currentSessions"].find(
+            (pair) => pair.windowId === thisWindow.id
+        );
+        // console.log("session de cette fenêtre", currentSession)
+        if (currentSession) {
+            // si le windowId de l'une d'entre elles correspond à la fenêtre active : afficher le nom
+            currentSessionDisplay.innerHTML = `Session ouverte dans cette fenêtre : <div id="currentSessionName">${currentSession.name} </div>`;
+        } else {
+            // si non (à la fin de la boucle) : afficher "pas de session active" (ou rien ?)
+            currentSessionDisplay.innerHTML = `Pas de session ouverte dans cette fenêtre.`;
+        }
+    });
+}
 
 async function printSessions() {
     sessionDisplay.innerHTML = "";
@@ -85,23 +137,30 @@ async function handleNewSession() {
     const newSessionTitle = inputBox.value;
     // send message with this name to background => so it get current tabs & saves  it as a new session
     if (newSessionTitle) {
-        await saveCurrentSession(newSessionTitle);
+        await saveSession(newSessionTitle);
         await printSessions();
         inputBox.value = "";
     }
 }
 
-async function saveCurrentSession(name) {
+async function saveSession(name) {
     // obtenir la liste des tabs
-    let formattedTabsList = await chrome.tabs
+    const [formattedTabsList, windowId] = await chrome.tabs
         .query({ currentWindow: true })
-        .then((tabsList) =>
-            tabsList.map((tab) => {
-                return { tab: tab.title, URL: tab.url };
-            })
-        );
+        .then((tabsList) => {
+            return [
+                tabsList.map((tab) => {
+                    return { tab: tab.title, URL: tab.url };
+                }),
+                tabsList[0].windowId,
+            ];
+        });
+    // console.log("windowId", windowId);
+    // console.log(await chrome.tabs.query({ currentWindow: true }))
     // sauvegarder dans le storage
     await chrome.storage.local.set({ [name]: formattedTabsList });
+    // updater
+    await saveCurrentSession(windowId, name);
 }
 
 async function openSession(sessionTitle) {
@@ -113,7 +172,11 @@ async function openSession(sessionTitle) {
     const urls = tabsArray.map((tab) => tab.URL);
 
     // ouvrir la fenêtre avec les onglets de la session
-    chrome.windows.create({ focused: true, state: "maximized", url: urls });
+    let newWindow = await chrome.windows.create({
+        focused: true,
+        state: "maximized",
+        url: urls,
+    });
     // CHECK : si un seul onglet est ouvert et qu'il s'agit d'un onglet newTab ou d'un onglet de recherche Google
     await chrome.windows.getCurrent({ populate: true }).then((window) => {
         const closingWindowConditions =
@@ -122,13 +185,33 @@ async function openSession(sessionTitle) {
                 window.tabs[0].url === "chrome://newtab/");
         if (closingWindowConditions) chrome.windows.remove(window.id);
     });
+    console.log(newWindow.id);
+    console.log(sessionTitle);
+    await saveCurrentSession(newWindow.id, sessionTitle);
 }
 
 async function deleteSession(event) {
     const sessionName = event.target.dataset.name;
     await chrome.storage.local.remove(sessionName);
-    // actualiser l'affichage de la liste
+    // supprimer la paire dans le storage
+    await deleteCurrentSessionPair(sessionName);
+    // actualiser l'affichage
+    updateCurrentSessionNameDisplay();
     printSessions();
+}
+
+// quand je supprime une session : supprimer la currentSession
+async function deleteCurrentSessionPair(sessionName) {
+    // récupérer la liste des paires
+    const storage = await chrome.storage.local.get();
+    // chercher celle dont le nom correspond à la session supprimée
+    const updatedCurrentSessions = storage["currentSessions"].filter(
+        (pair) => pair.name !== sessionName
+    );
+    // mettre à jour le storage
+    await chrome.storage.local.set({
+        ["currentSessions"]: updatedCurrentSessions,
+    });
 }
 
 function showHideTabs(event) {
@@ -136,10 +219,10 @@ function showHideTabs(event) {
         event.target.parentNode.parentNode.querySelector(".tabsList");
     if (sessionTabsListHTML.className === "tabsList visible") {
         sessionTabsListHTML.className = "tabsList hidden";
-        event.target.style.transform = "rotate(0deg)"
+        event.target.style.transform = "rotate(0deg)";
     } else {
         sessionTabsListHTML.className = "tabsList visible";
-        event.target.style.transform = "rotate(90deg)"
+        event.target.style.transform = "rotate(90deg)";
     }
 }
 
@@ -186,3 +269,6 @@ async function deleteTab(event) {
 }
 
 function deleteList(event) {}
+
+// modifier la fonction de sauvegarde d'une paire
+// ajouter la suppression d'une paire quand je supprime une session
