@@ -2,6 +2,8 @@
 const sessionDisplay = document.querySelector("#sessionsList");
 // récupérer la div pour afficher la session actuelle
 const currentSessionDisplay = document.body.querySelector("#currentSession");
+// créer une div "refresh"
+const refreshDiv = document.querySelector("#refresh");
 
 async function main() {
     // si aucune paire n'est encore sauvegardée, créer une clé dans le storage
@@ -40,6 +42,22 @@ async function main() {
 
 main();
 
+function displayRefreshButton(sessionTitle) {
+    // afficher un bouton refresh SI une session est ouverte dans la fenêtre = si 
+    refreshDiv.innerHTML = `<button>Mettre à jour la session</button>`;
+    // placer un eventListener sur un bouton refresh
+    refreshDiv.querySelector("button").addEventListener('click', refreshSession)
+}
+// quand je clique :
+// récupérer la liste des tabs ouverts dans la fenêtre actuelle
+// récupérer le nom de la session
+// updater la liste des tabs correspondant dans le storage
+
+async function refreshSession(sessionTitle) {
+    // récupérer le nom de la session actuelle
+    console.log("session à refresh :", sessionTitle)
+}
+
 async function saveCurrentSession(windowId, sessionTitle) {
     // quand j'ouvre une session : enregistrer la windowId dans [currentSessions]
     // quand je crée une session : idem
@@ -69,9 +87,11 @@ async function updateCurrentSessionNameDisplay() {
         if (currentSession) {
             // si le windowId de l'une d'entre elles correspond à la fenêtre active : afficher le nom
             currentSessionDisplay.innerHTML = `Session ouverte dans cette fenêtre : <div id="currentSessionName">${currentSession.name} </div>`;
+            displayRefreshButton(currentSession.name);
         } else {
             // si non (à la fin de la boucle) : afficher "pas de session active" (ou rien ?)
             currentSessionDisplay.innerHTML = `Pas de session ouverte dans cette fenêtre.`;
+            refreshDiv.innerHTML = "";
         }
     });
 }
