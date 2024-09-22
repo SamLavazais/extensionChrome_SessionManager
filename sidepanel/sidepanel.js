@@ -53,9 +53,10 @@ function displayRefreshButton(sessionTitle) {
 // récupérer le nom de la session
 // updater la liste des tabs correspondant dans le storage
 
-async function refreshSession(sessionTitle) {
-    // récupérer le nom de la session actuelle
-    console.log("session à refresh :", sessionTitle)
+async function refreshSession() {
+    let sessionTitle = currentSessionDisplay.dataset.name;   
+    await saveSession(sessionTitle);
+    await printSessions();
 }
 
 async function saveCurrentSession(windowId, sessionTitle) {
@@ -87,6 +88,7 @@ async function updateCurrentSessionNameDisplay() {
         if (currentSession) {
             // si le windowId de l'une d'entre elles correspond à la fenêtre active : afficher le nom
             currentSessionDisplay.innerHTML = `Session ouverte dans cette fenêtre : <div id="currentSessionName">${currentSession.name} </div>`;
+            currentSessionDisplay.dataset.name = currentSession.name;
             displayRefreshButton(currentSession.name);
         } else {
             // si non (à la fin de la boucle) : afficher "pas de session active" (ou rien ?)
