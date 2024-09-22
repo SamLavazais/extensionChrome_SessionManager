@@ -44,9 +44,9 @@ main();
 
 function displayRefreshButton(sessionTitle) {
     // afficher un bouton refresh SI une session est ouverte dans la fenêtre = si 
-    refreshDiv.innerHTML = `<button>Mettre à jour la session</button>`;
+    refreshDiv.innerHTML = `<img class="refreshBtn" src="refreshBtn.svg" alt="">`;
     // placer un eventListener sur un bouton refresh
-    refreshDiv.querySelector("button").addEventListener('click', refreshSession)
+    refreshDiv.querySelector(".refreshBtn").addEventListener('click', refreshSession)
 }
 // quand je clique :
 // récupérer la liste des tabs ouverts dans la fenêtre actuelle
@@ -87,7 +87,7 @@ async function updateCurrentSessionNameDisplay() {
         // console.log("session de cette fenêtre", currentSession)
         if (currentSession) {
             // si le windowId de l'une d'entre elles correspond à la fenêtre active : afficher le nom
-            currentSessionDisplay.innerHTML = `Session ouverte dans cette fenêtre : <div id="currentSessionName">${currentSession.name} </div>`;
+            currentSessionDisplay.innerHTML = `Session ouverte ici : <div id="currentSessionName"><strong>${currentSession.name}</strong></div>`;
             currentSessionDisplay.dataset.name = currentSession.name;
             displayRefreshButton(currentSession.name);
         } else {

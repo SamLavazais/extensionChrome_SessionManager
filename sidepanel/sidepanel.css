@@ -46,6 +46,42 @@ input {
     justify-self: center;
 }
 
+#currentBox {
+    display: grid;
+    grid-template-columns: 9fr 3fr;
+    /* gap: 3px; */
+    align-items: stretch;
+    padding: 10px;
+    margin : 0px 20px 10px 20px;
+}
+
+#currentSession {
+    color: rgb(126, 25, 70);
+    width: 100%;
+}
+
+#currentSessionName {
+    display: inline;
+    margin-left: 10px;
+}
+
+#refreshDiv button {
+    align-self: center;
+    background-color: pink;
+    border-radius: 100%;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.refreshBtn {
+    align-self: center;
+    background-color: rgb(126, 25, 70);
+    border-radius: 100%;
+    padding: 5px;
+    cursor: pointer;
+    cursor: pointer;
+}
+
 #sessionsList {
     margin-top: 30px;
 }
